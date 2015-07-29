@@ -1,0 +1,21 @@
+#!/bin/bash
+
+MOUNTPT=$1;
+
+
+if [ -z "$MOUNTPT" ]; then
+  exit 1;
+fi;
+
+# Add a delay to let gnome sort its life out
+sleep 1;
+
+# Find any mounts which
+mount | fgrep $MOUNTPT | cut -d' ' -f3 | grep -v "$MOUNTPT/*$" | while read mounted; do
+  umount $mounted;
+done
+
+# More delays for more gnome crap
+sleep 1;
+
+umount -l "$MOUNTPT";

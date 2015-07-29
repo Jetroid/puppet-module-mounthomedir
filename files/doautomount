@@ -1,0 +1,134 @@
+#!/bin/bash
+#
+# sysjdsm 20080924 hacky little script to grab the
+#                  homeDirectory mountpoint from AD
+# sysamn 20110216 Modified for Ubuntu build and added Moar Magic
+#
+# doautomount <USERNAME> <MOUNTPOINT> <USERUID> <USERGID>
+#
+
+### Config ###
+
+# Base DN to search against in AD
+LDAPBASEDN='DC=ecs,DC=soton,DC=ac,DC=uk';
+
+# LDAP domain - this is probably the same as the base DN,
+# but should only contain the dc= parts (domain component)
+LDAPDOMAIN='DC=ecs,DC=soton,DC=ac,DC=uk';
+
+# List of LDAP URIs for searching
+LDAPURIS='ldap://dc0.ecs.soton.ac.uk,ldap://dc1.ecs.soton.ac.uk,ldap://dc2.ecs.soton.ac.uk';
+
+# File and directory modes (set restrictive to stop users accessing
+# each others' home dirs)
+FILEMODE=0600;
+DIRMODE=0700;
+
+# Custom mount options (flags rather than param=value ones)
+OPTS="nobrl,serverino,_netdev";
+
+# Parameters we've been passed
+USERNAME=$1;
+MOUNTPOINT=$2;
+USERUID=$3;
+USERGID=$4;
+
+logger -t pam_mount_doautomount "Attempting to mount home directory for '$USERNAME'";
+
+# If, for some reason, the user doesn't have unixHomeDirectory set in LDAP then we won't have a mount point
+# Check for this special case and default to /home/username, then check we've got all the params
+if [[ "$MOUNTPOINT" =~ ^[0-9]+$ ]] && [[ "$USERUID" =~ ^[0-9]+$ ]] && [ -z "$USERGID" ]; then
+  logger -t pam_mount_doautomount "Given UID and GID but mountpoint is blank - default to /home/$USERNAME";
+  USERGID=$USERUID;
+  USERUID=$MOUNTPOINT;
+  MOUNTPOINT="/home/$USERNAME";
+elif [[ ! "$USERUID" =~ ^[0-9]+$ ]] || [[ ! "$USERGID" =~ [0-9]+$ ]]; then
+  logger -t pam_mount_doautomount "UID [$USERUID] or GID [$USERGID] is not numeric - failing";
+  exit 1;
+fi;
+
+logger -t pam_mount_doautomount "Params: user [$USERNAME] mountpoint [$MOUNTPOINT] uid [$USERUID] gid [$USERGID]";
+
+# Convert LDAP domain to URL-encoded syntax for lookups
+# i.e. convert = to %3D, convert , to %2C
+# This lets us do searches without a hostname, and it uses SRV records
+# to work out which hosts to talk to
+LDAPDOMAIN=$(echo $LDAPDOMAIN | sed 's/=/%3D/g' | sed 's/,/%2C/g');
+
+# Mount options
+OPTS="$OPTS,user=$USERNAME,uid=${USERUID},gid=${USERGID},file_mode=${FILEMODE},dir_mode=${DIRMODE}";
+
+# Local accounts should not have remote filestore, so ignore to save having a delay
+if grep "^$USERNAME:" /etc/passwd >/dev/null; then 
+	exit 0;
+fi
+
+# Sanitise username
+USERNAME=${USERNAME//[^a-zA-Z0-9_]/};
+
+# If it's already mounted, exit
+isAlready=`mount | grep "on ${MOUNTPOINT}" | wc -l`
+if [ "$isAlready" != "0" ]; then
+        logger -t pam_mount_doautomount "Homedir for $USERNAME already mounted at $MOUNTPOINT"
+        exit 0
+fi
+
+# connect to the domain server and get the home directory share from the AD profile
+share=$(ldapsearch -H $LDAPURIS -b $LDAPBASEDN '(cn='$USERNAME')' homeDirectory 2>/dev/null | awk '/^homeDirectory/{print $2}' | sed 's/\\/\//g' | sed 's/^\/\///')
+
+
+# if we didn't get an adequate response, assume it's on ugsamba
+len=$(echo $share| wc -c)
+if [ $len -lt 10 ]; then
+    logger -t pam_mount_doautomount "Failed to find share location in LDAP (may need kerberos packages installing?) - default to ugsamba";
+    share=ugsamba/$USERNAME;
+fi
+
+logger -t pam_mount_doautomount "Homedir for $USERNAME is on share $share"
+
+# Split it into the fileserver hostname and share location
+fileserver=${share%/*};
+folder=${share#*/};
+
+# Resolve the hostname to its primary DNS name (short name, not FQDN)
+# (this means the kerberos principal has the correct name, and everything works)
+fileserver=$(host $fileserver| grep 'has address' | cut -d' ' -f1 | cut -d'.' -f1);
+
+# Search AD for the machine itself and find out if it's got a service principal
+principal=$(ldapsearch -H $LDAPURIS -b $LDAPBASEDN '(cn='$fileserver')' servicePrincipalName 2>/dev/null | grep "^servicePrincipalName" | head -1)
+
+logger -t pam_mount_doautomount "Found kerberos principal for $fileserver: '$principal'";
+
+# If it's got no service principal, don't bother trying kerberos auth!
+TRY_KRB5=1;
+if [ -z "$principal" ]; then
+  TRY_KRB5=0;
+  logger -t pam_mount_doautomount "Could not find kerberos principal for $fileserver - won't try krb5 auth.";
+fi;
+
+if [ $TRY_KRB5 -eq 1 ]; then
+  # cruid is the user ID for the credentials file - now needed in 12.04 or it fails to mount
+  SECTYPE="krb5,cruid=${USERUID}";
+else
+  SECTYPE=ntlmv2;
+fi;
+
+# Assure the homedir exists
+if [ ! -d "$MOUNTPOINT" ]; then
+
+  logger -t pam_mount_doautomount "Creating home directory $MOUNTPOINT";
+  mkdir -p "$MOUNTPOINT";
+  chown $USERNAME "$MOUNTPOINT";
+
+fi;
+
+# Perform the mount
+logger -t pam_mount_doautomount "Mounting //$fileserver/$folder on $MOUNTPOINT"
+mount -t cifs //${fileserver}/${folder} $MOUNTPOINT -o $OPTS,sec=$SECTYPE 2>&1;
+
+# If it failed and we're using krb5, try again with ntlmv2
+if [ $? -ne 0 ] && [ $SECTYPE == 'krb5' ]; then
+    logger -t pam_mount_doautomount "Kerberos auth failed - retrying mount with ntlmv2 auth"
+    mount -t cifs //${fileserver}/${folder} $MOUNTPOINT -o $OPTS,sec=ntlmv2 2>&1;
+fi;
+
