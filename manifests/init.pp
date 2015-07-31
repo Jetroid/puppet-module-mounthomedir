@@ -9,6 +9,7 @@ class mounthomedir{
 		ensure  => present,
 		owner   => root,
 		group   => root,
+		mode    => "755",
 	}
 
 	# Packages needed for samba-mounted homedirs
@@ -49,11 +50,9 @@ class mounthomedir{
 	Class['pam_mount']
 	  ->
 	file{ '/usr/local/bin/doautomount':
-		mode    => 755,
 		source  => "puppet:///modules/mounthomedir/doautomount",
 	} ->
 	file{ '/usr/local/bin/doautounmount':
-		mode    => 755,
 		source  => "puppet:///modules/mounthomedir/doautounmount",
 	}
 }
