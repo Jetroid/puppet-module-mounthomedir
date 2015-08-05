@@ -2,58 +2,20 @@
 #
 # Mount the user's home directory. 
 #
-class mounthomedir{
+class mounthomedir (
+  $ensure                   = $mounthomedir::params::ensure,
+  $homedir_packages         = $mounthomedir::params::homedir_packages,
+  $ldap_base_dn             = $mounthomedir::params::ldap_base_dn,
+  $ldap_uri                 = $mounthomedir::params::ldap_uri,
+  $fallback_homedirs_server = $mounthomedir::params::fallback_homedirs_server,
+) inherits mounthomedir::params {
 
-	# Defaults for the file resource type.
-	File {
-		ensure  => present,
-		owner   => root,
-		group   => root,
-		mode    => "755",
-	}
+  validate_re($ensure, '^(present|absent)$',"${ensure} is not allowed for the 'ensure' parameter. Allowed values are 'present' and 'absent'.")
 
-	# Packages needed for samba-mounted homedirs
-	case $osfamily {
-		/Debian/: {
-			$homedir_packages = [
-				'cifs-utils',
-				'libgssapi-krb5-2',
-				'samba-common-bin',
-				'keyutils',
-				'libsasl2-modules-gssapi-mit',
-				'ldap-utils',
-				'krb5-user',
-			]
-		}
+  validate_array($homedir_packages,)
 
-		/RedHat/: {
-			$homedir_packages = [
-				'cifs-utils',
-				#'libgssapi-krb5-2',
-				'samba-common',
-				'keyutils',
-				#'libsasl2-modules-gssapi-mit',
-				'openldap-clients',
-				'krb5-workstation',
-			]
-		}
-
-		/Default/: {
-			fail('mounthomedir only supports Debian and RedHat OS families.')
-		}
-	}
-
-	# Automounted home directories
-	package{$homedir_packages:
-		ensure => present,
-	} ->
-	Class['pam_mount']
-	  ->
-	file{ '/usr/local/bin/doautomount':
-                content => template('mounthomedir/doautomount.erb'),
-	} ->
-	file{ '/usr/local/bin/doautounmount':
-		source  => "puppet:///modules/mounthomedir/doautounmount",
-	}
+  anchor { 'mounthomedir::begin': } ->
+  class { '::mounthomedir::install': } ->
+  anchor { 'mounthomedir::end': }
 }
 
