@@ -22,7 +22,7 @@ class mounthomedir{
 				'keyutils',
 				'libsasl2-modules-gssapi-mit',
 				'ldap-utils',
-				#'krb5-user',
+				'krb5-user',
 			]
 		}
 
@@ -34,7 +34,7 @@ class mounthomedir{
 				'keyutils',
 				#'libsasl2-modules-gssapi-mit',
 				'openldap-clients',
-				#'krb5-workstation',
+				'krb5-workstation',
 			]
 		}
 
@@ -50,7 +50,7 @@ class mounthomedir{
 	Class['pam_mount']
 	  ->
 	file{ '/usr/local/bin/doautomount':
-		source  => "puppet:///modules/mounthomedir/doautomount",
+                content => template('mounthomedir/doautomount.erb'),
 	} ->
 	file{ '/usr/local/bin/doautounmount':
 		source  => "puppet:///modules/mounthomedir/doautounmount",

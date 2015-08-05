@@ -1,8 +1,14 @@
 #!/bin/bash
 #
+#       This file is being maintained by Puppet.
+# 	DO NOT EDIT
+#
 # sysjdsm 20080924 hacky little script to grab the
 #                  homeDirectory mountpoint from AD
+#
 # sysamn 20110216 Modified for Ubuntu build and added Moar Magic
+#
+# jh17g14 20150805 Converted to Puppet template file to remove ECS-specificness. 
 #
 # doautomount <USERNAME> <MOUNTPOINT> <USERUID> <USERGID>
 #
@@ -10,14 +16,14 @@
 ### Config ###
 
 # Base DN to search against in AD
-LDAPBASEDN='DC=ecs,DC=soton,DC=ac,DC=uk';
+LDAPBASEDN='<%= scope.lookupvar('ldap_base_dn') %>';
 
 # LDAP domain - this is probably the same as the base DN,
 # but should only contain the dc= parts (domain component)
-LDAPDOMAIN='DC=ecs,DC=soton,DC=ac,DC=uk';
+LDAPDOMAIN='<%= scope.lookupvar('ldap_base_dn') %>';
 
 # List of LDAP URIs for searching
-LDAPURIS='ldap://dc0.ecs.soton.ac.uk,ldap://dc1.ecs.soton.ac.uk,ldap://dc2.ecs.soton.ac.uk';
+LDAPURIS='<%= scope.lookupvar('ldap_uri') %>';
 
 # File and directory modes (set restrictive to stop users accessing
 # each others' home dirs)
@@ -77,11 +83,11 @@ fi
 share=$(ldapsearch -H $LDAPURIS -b $LDAPBASEDN '(cn='$USERNAME')' homeDirectory 2>/dev/null | awk '/^homeDirectory/{print $2}' | sed 's/\\/\//g' | sed 's/^\/\///')
 
 
-# if we didn't get an adequate response, assume it's on ugsamba
+# if we didn't get an adequate response, assume it's on <%= scope.lookupvar('fallback_homedirs_server') %> 
 len=$(echo $share| wc -c)
 if [ $len -lt 10 ]; then
-    logger -t pam_mount_doautomount "Failed to find share location in LDAP (may need kerberos packages installing?) - default to ugsamba";
-    share=ugsamba/$USERNAME;
+    logger -t pam_mount_doautomount "Failed to find share location in LDAP (may need kerberos packages installing?) - default to <%= scope.lookupvar('fallback_homedirs_server') %>";
+    share=<%= scope.lookupvar('fallback_homedirs_server') %>/$USERNAME;
 fi
 
 logger -t pam_mount_doautomount "Homedir for $USERNAME is on share $share"
