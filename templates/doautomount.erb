@@ -23,7 +23,8 @@ LDAPBASEDN='<%= scope.lookupvar('ldap_base_dn') %>';
 LDAPDOMAIN='<%= scope.lookupvar('ldap_base_dn') %>';
 
 # List of LDAP URIs for searching
-LDAPURIS='<%= scope.lookupvar('ldap_uri') %>';
+<%- ldapuris = scope.lookupvar('ldap_uri') -%>
+LDAPURIS='<% ldapuris.each do |uri| -%><%= uri -%>,<% end -%>';
 
 # File and directory modes (set restrictive to stop users accessing
 # each others' home dirs)
@@ -31,7 +32,8 @@ FILEMODE=0600;
 DIRMODE=0700;
 
 # Custom mount options (flags rather than param=value ones)
-OPTS="nobrl,serverino,_netdev";
+<%- custom_mount_options = scope.lookupvar('custom_mount_options') -%>
+OPTS="<% custom_mount_options.each do |opt| -%><%= opt -%>,<% end -%>";
 
 # Parameters we've been passed
 USERNAME=$1;
