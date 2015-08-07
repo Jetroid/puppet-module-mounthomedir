@@ -1,79 +1,100 @@
-# mount_homedir
+# mounthomedir
 
 #### Table of Contents
 
 1. [Overview](#overview)
 2. [Module Description - What the module does and why it is useful](#module-description)
-3. [Setup - The basics of getting started with mount_homedir](#setup)
-    * [What mount_homedir affects](#what-mount_homedir-affects)
-    * [Setup requirements](#setup-requirements)
-    * [Beginning with mount_homedir](#beginning-with-mount_homedir)
-4. [Usage - Configuration options and additional functionality](#usage)
-5. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
-5. [Limitations - OS compatibility, etc.](#limitations)
-6. [Development - Guide for contributing to the module](#development)
+3. [Parameters](#usage)
+4. [Limitations - OS compatibility, etc.](#limitations)
 
 ## Overview
 
-A one-maybe-two sentence summary of what the module does/what problem it solves.
-This is your 30 second elevator pitch for your module. Consider including
-OS/Puppet version it works with.
+Module to access and mount users homedir from a system using kerberos. Mounts to /home/$username.
 
-## Module Description
+Has the dependency on pam_mount. Provides settings for pam_mount.conf.xml
 
-If applicable, this section should have a brief description of the technology
-the module integrates with and what that integration enables. This section
-should answer the questions: "What does this module *do*?" and "Why would I use
-it?"
+## Parameters
 
-If your module has a range of functionality (installation, configuration,
-management, etc.) this is the time to mention it.
+ensure
+------
 
-## Setup
+Defines if mounthomedir and its relevant packages are to be installed or removed.
 
-### What mount_homedir affects
+Accepts: 'present', 'absent'
+Default: 'present'
 
-* A list of files, packages, services, or operations that the module will alter,
-  impact, or execute on the system it's installed on.
-* This is a great place to stick any warnings.
-* Can be in list or paragraph form.
+scripts_ensure
+--------------
 
-### Setup Requirements **OPTIONAL**
+Defines if the doautomount and doautounmount scripts are to be installed or removed. Valid values are 'present' and 'absent'.
 
-If your module requires anything extra before setting up (pluginsync enabled,
-etc.), mention it here.
+Accepts: 'present', 'absent'
+Default: Value of $ensure
 
-### Beginning with mount_homedir
+default_homedirs_server_fqdn
+----------------------------
 
-The very basic steps needed for a user to get the module up and running.
+The fully qualified domain name of the server to search for home directories.
+If $pam_mount_config is overwritten, this does nothing.
 
-If your most recent release breaks compatibility or requires particular steps
-for upgrading, you may wish to include an additional section here: Upgrading
-(For an example, see http://forge.puppetlabs.com/puppetlabs/firewall).
+Accepts: String
+Default: 'foo.bar.example.co.uk'
 
-## Usage
+pam_mount_config
+----------------
 
-Put the classes, types, and resources for customizing, configuring, and doing
-the fancy stuff with your module here.
+This module also configures pam_mount.conf.xml through the pam_mount module. 
+The value of this parameter can be used to configure the pam_mount module.
 
-## Reference
+Accepts: See pam_mount::config.
+Default: Results in the following XML:
+```<pam_mount>
+<debug enable="0"/>
+<path>/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin</path>
+<cifsmount>doautomount %(USER) /home/$(USER) %(USERUID) %(USERGID)</cifsmount>
+<volume fstype="cifs" server="$default_homedirs_server_fqdn" path="%(USER)" mountpoint=""/> 
+</pam_mount>```
 
-Here, list the classes, types, providers, facts, etc contained in your module.
-This section should include all of the under-the-hood workings of your module so
-people know what the module is touching on their system but don't need to mess
-with things. (We are working on automating this section!)
+ldap_base_dn
+------------
+
+Base domain name to search against in Active Directory.
+Should be split into domain components as 'DC=bar,DC=example,DC=co,DC=uk'.
+
+Accepts: String
+Default: 'DC=bar,DC=example,DC=co,DC=uk'
+
+ldap_uri
+--------
+
+List of servers as URIs to search with ldapsearch. 
+
+Accepts: Array
+Default: ['ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk']
+
+fallback_homedirs_server
+------------------------
+
+The name of the server to fall back to if automatic searching fails.
+This should take only the name of the server, not the fully qualified name.
+For example, if your server is foo.bar.example.co.uk, then this parameter should
+take the value 'foo'.
+
+Accepts: String
+Default: 'foo'
+
+custom_mount_options
+--------------------
+
+Options used for mount.cifs -o. (eg: iocharset, rw, perm, etc.)
+
+Accepts: Array
+Default: ['nobrl','serverino','_netdev']
 
 ## Limitations
 
-This is where you list OS compatibility, version compatibility, etc.
+Tested on Ubuntu 14.04 64bit/32bit.
 
-## Development
+## Release Notes/Contributors/Etc 
 
-Since your module is awesome, other users will want to play with it. Let them
-know what the ground rules for contributing are.
-
-## Release Notes/Contributors/Etc **Optional**
-
-If you aren't using changelog, put your release notes here (though you should
-consider using changelog). You may also add any additional sections you feel are
-necessary or important to include here. Please use the `## ` header.
+0.1.0 - Initial Release
