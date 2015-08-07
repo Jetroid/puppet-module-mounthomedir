@@ -3,19 +3,20 @@ class mounthomedir::params {
 
   $ensure = 'present'
   $scripts_ensure = $ensure
+  $default_homedirs_server_fqdn = hiera('mounthomedir::default_homedirs_server_fqdn', 'foo.bar.example.co.uk')
   $pam_mount_config = [
-      ['debug', {'enable' =>  '"0"'}],
-      [path, '"/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"'],
+      ['debug', {'enable' =>  '1'}],
+      [path, '/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin'],
       # Custom mount/unmount scripts; these automatically find the user's 
       # home filestore location etc.
-      ['cifsmount','doautomount %(USER) %(MNTPT) %(USERUID) %(USERGID)'],
-      ['umount','"doautounmount %(MNTPT)"'],
+      ['cifsmount','doautomount %(USER) /home/%(USER) %(USERUID) %(USERGID)'],
+      ['umount','doautounmount /home/%(USER)'],
       # Always cifs mount home directories; use server in $default_homedirs_server_fqdn (eg: foo.bar.example.co.uk) by default.
       ['volume', {
-        'fstype'     => '"cifs"',
-        'server'     => "\"${default_homedirs_server_fqdn}\"",
-        'path'       => '"%(USER)"',
-        'mountpoint' => '"~"',}
+        'fstype'     => 'cifs',
+        'server'     => "${default_homedirs_server_fqdn}",
+        'path'       => '%(USER)',
+        'mountpoint' => '',}
       ]
       # Note for Future People from Space: do not set sgrp
       # to Domain Users in the volume tag. It'll get cached
@@ -59,8 +60,6 @@ class mounthomedir::params {
   #If homedirs server is foo.bar.example.co.uk, use foo.
   #Server to use if all else fails.
   $fallback_homedirs_server = 'foo'
-
-  $default_homedirs_server_fqdn = 'foo.bar.example.co.uk'
 
   $custom_mount_options = ['nobrl','serverino','_netdev']
 
