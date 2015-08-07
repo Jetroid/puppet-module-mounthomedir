@@ -53,7 +53,8 @@ Default: Results in the following XML:
 <path>/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin</path>
 <cifsmount>doautomount %(USER) /home/$(USER) %(USERUID) %(USERGID)</cifsmount>
 <volume fstype="cifs" server="$default_homedirs_server_fqdn" path="%(USER)" mountpoint=""/> 
-</pam_mount>```
+</pam_mount>
+```
 
 ldap_base_dn
 ------------
@@ -90,7 +91,7 @@ Options used for mount.cifs -o. (eg: iocharset, rw, perm, etc.)
 
 Accepts: Array
 Default: ['nobrl','serverino','_netdev']
-
+	
 ## Limitations
 
 Tested on Ubuntu 14.04 64bit/32bit.
