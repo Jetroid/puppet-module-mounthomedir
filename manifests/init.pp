@@ -5,12 +5,12 @@
 class mounthomedir (
   $ensure                       = $mounthomedir::params::ensure,
   $scripts_ensure               = $mounthomedir::params::scripts_ensure,
+  $default_homedirs_server_fqdn = $mounthomedir::params::default_homedirs_server_fqdn,
   $pam_mount_config             = $mounthomedir::params::pam_mount_config,
   $homedir_packages             = $mounthomedir::params::homedir_packages,
   $ldap_base_dn                 = $mounthomedir::params::ldap_base_dn,
   $ldap_uri                     = $mounthomedir::params::ldap_uri,
   $fallback_homedirs_server     = $mounthomedir::params::fallback_homedirs_server,
-  $default_homedirs_server_fqdn = $mounthomedir::params::default_homedirs_server_fqdn,
   $custom_mount_options         = $mounthomedir::params::custom_mount_options,
 ) inherits mounthomedir::params {
 
