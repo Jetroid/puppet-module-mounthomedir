@@ -1,7 +1,7 @@
 # Default parameters
 class mounthomedir::params {
 
-  $ensure = 'present'
+  $ensure = hiera('mounthomedir::ensure', 'present')
   $scripts_ensure = $ensure
   $default_homedirs_server_fqdn = hiera('mounthomedir::default_homedirs_server_fqdn', 'foo.bar.example.co.uk')
   $pam_mount_config = [
@@ -55,7 +55,7 @@ class mounthomedir::params {
 
   $ldap_base_dn = 'DC=bar,DC=example,DC=co,DC=uk'
 
-  $ldap_uri = ['dc=bar','dc=example','dc=co','dc=uk']
+  $ldap_uri = ['ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk']
 
   #If homedirs server is foo.bar.example.co.uk, use foo.
   #Server to use if all else fails.
