@@ -71,7 +71,7 @@ ldap_uri
 List of servers as URIs to search with ldapsearch. 
 
 Accepts: Array
-Default: ['ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk']
+Default: ['ldap://baz0.bar.example.co.uk','ldap://baz1.bar.example.co.uk','ldap://baz2.bar.example.co.uk']
 
 fallback_homedirs_server
 ------------------------

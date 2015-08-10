@@ -55,7 +55,7 @@ class mounthomedir::params {
 
   $ldap_base_dn = 'DC=bar,DC=example,DC=co,DC=uk'
 
-  $ldap_uri = ['ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk','ldap://baz0.bar.example.co.uk']
+  $ldap_uri = ['ldap://baz0.bar.example.co.uk','ldap://baz1.bar.example.co.uk','ldap://baz2.bar.example.co.uk']
 
   #If homedirs server is foo.bar.example.co.uk, use foo.
   #Server to use if all else fails.
