@@ -4,7 +4,12 @@
 # 	DO NOT EDIT
 
 MOUNTPT=$1;
+USERNAME=${MOUNTPT#*/};
 
+# Local accounts should not have remote filestore, so ignore to save having a delay
+if grep "^$USERNAME:" /etc/passwd >/dev/null; then 
+  exit 0;
+fi
 
 if [ -z "$MOUNTPT" ]; then
   exit 1;
