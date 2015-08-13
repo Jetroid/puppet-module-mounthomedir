@@ -50,7 +50,7 @@ class mounthomedir::params {
         'keyutils',
         'libsasl2-modules-gssapi-mit',
         'ldap-utils',
-        'krb5-user',
+        #'krb5-user',
       ]
     }
     /RedHat/: {
@@ -61,7 +61,7 @@ class mounthomedir::params {
         'keyutils',
         #'libsasl2-modules-gssapi-mit',
         'openldap-clients',
-        'krb5-workstation',
+        #'krb5-workstation',
       ]
     }
     /Default/: {
