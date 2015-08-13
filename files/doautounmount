@@ -4,14 +4,16 @@
 # 	DO NOT EDIT
 
 MOUNTPT=$1;
-USERNAME=${MOUNTPT#*/};
+USERNAME=${MOUNTPT##*/};
 
 # Local accounts should not have remote filestore, so ignore to save having a delay
-if grep "^$USERNAME:" /etc/passwd >/dev/null; then 
+if grep "^$USERNAME:" /etc/passwd >/dev/null; then
+  logger -t pam_mount_doautounmount "${USERNAME} is a local user. Not unmounting."
   exit 0;
 fi
 
 if [ -z "$MOUNTPT" ]; then
+  logger -t pam_mount_doautounmount "Mountpoint is null."
   exit 1;
 fi;
 
@@ -20,10 +22,12 @@ sleep 1;
 
 # Find any mounts which
 mount | fgrep $MOUNTPT | cut -d' ' -f3 | grep -v "$MOUNTPT/*$" | while read mounted; do
+  logger -t pam_mount_doautounmount "Unmounting ${mounted}."
   umount $mounted;
 done
 
 # More delays for more gnome crap
 sleep 1;
 
+  logger -t pam_mount_doautounmount "Unmounting ${MOUNTPT}."
 umount -l "$MOUNTPT";
