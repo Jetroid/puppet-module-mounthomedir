@@ -1,17 +1,17 @@
 # Default parameters
 class mounthomedir::params {
 
-  $ensure = hiera('mounthomedir::ensure', 'present')
+  $ensure = 'present'
   $scripts_ensure = $ensure
-  $default_homedirs_server_fqdn = hiera('mounthomedir::default_homedirs_server_fqdn', 'foo.bar.example.co.uk')
+  $default_homedirs_server_fqdn = 'foo.bar.example.co.uk'
   #If homedirs server is foo.bar.example.co.uk, use foo.
   #Server to use if all else fails.
-  $fallback_homedirs_server = hiera('mounthomedir::fallback_homedirs_server', 'foo')
+  $fallback_homedirs_server = 'foo'
 
-  $custom_mount_options = hiera('mounthomedir::custom_mount_options', ['nobrl','serverino','_netdev'])
+  $custom_mount_options = ['nobrl','serverino','_netdev']
   $opts = join($custom_mount_options, ",")
 
-  $security_type = hiera('mounthomedir::security_type', ['krb5','cruid=%(USERUID)'])
+  $security_type = ['krb5','cruid=%(USERUID)']
   $sectype = join($security_type, ",")
 
   $pam_mount_config = [
