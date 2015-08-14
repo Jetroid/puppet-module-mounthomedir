@@ -14,7 +14,7 @@ class mounthomedir::params {
   $security_type = ['krb5','cruid=%(USERUID)']
   $sectype = join($security_type, ",")
 
-  $pam_mount_config = [
+  $pam_mount_config = inline_template("<%= scope.lookupvar('[
       ['debug', {'enable' =>  '0'}],
       [path, '/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin'],
       # Custom mount/unmount scripts; these automatically find the user's 
@@ -38,7 +38,7 @@ class mounthomedir::params {
       # to Domain Users in the volume tag. It'll get cached
       # with only the previous people it's seen in that group,
       # and people won't be able to mount homedirs.
-    ]
+    ]') %>")
   
   # Packages needed for samba-mounted home directories.
   case $osfamily {
