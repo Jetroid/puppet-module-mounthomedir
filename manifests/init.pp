@@ -6,7 +6,6 @@ class mounthomedir (
   $ensure                       = $mounthomedir::params::ensure,
   $scripts_ensure               = $mounthomedir::params::scripts_ensure,
   $default_homedirs_server_fqdn = $mounthomedir::params::default_homedirs_server_fqdn,
-  $pam_mount_config             = $mounthomedir::params::pam_mount_config,
   $homedir_packages             = $mounthomedir::params::homedir_packages,
   $ldap_base_dn                 = $mounthomedir::params::ldap_base_dn,
   $ldap_uri                     = $mounthomedir::params::ldap_uri,
