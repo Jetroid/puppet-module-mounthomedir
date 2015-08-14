@@ -3,7 +3,7 @@ class mounthomedir::params {
 
   $ensure = 'present'
   $scripts_ensure = $ensure
-  $default_homedirs_server_fqdn = 'foo.bar.example.co.uk'
+  $default_homedirs_server_fqdn = lookup('mounthomedir::default_homedirs_server_fqdn',String,'hash','foo.bar.example.co.uk')
   #If homedirs server is foo.bar.example.co.uk, use foo.
   #Server to use if all else fails.
   $fallback_homedirs_server = 'foo'
@@ -14,7 +14,7 @@ class mounthomedir::params {
   $security_type = ['krb5','cruid=%(USERUID)']
   $sectype = join($security_type, ",")
 
-  $pam_mount_config = inline_template("<%= scope.lookupvar('[
+  $pam_mount_config = [
       ['debug', {'enable' =>  '0'}],
       [path, '/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin'],
       # Custom mount/unmount scripts; these automatically find the user's 
@@ -38,7 +38,7 @@ class mounthomedir::params {
       # to Domain Users in the volume tag. It'll get cached
       # with only the previous people it's seen in that group,
       # and people won't be able to mount homedirs.
-    ]') %>")
+    ]
   
   # Packages needed for samba-mounted home directories.
   case $osfamily {
