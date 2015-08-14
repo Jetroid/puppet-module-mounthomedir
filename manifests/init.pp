@@ -15,7 +15,7 @@ class mounthomedir (
 
   validate_re($ensure, '^(present|absent)$',"${ensure} is not allowed for the 'ensure' parameter. Allowed values are 'present' and 'absent'.")
 
-  validate_array($homedir_packages,$custom_mount_options, $pam_mount_config, $ldap_uri)
+  validate_array($homedir_packages,$custom_mount_options, $ldap_uri)
 
   validate_string($default_homedirs_server_fqdn,$fallback_homedirs_server, $ldap_base_dn)
 
